@@ -43,32 +43,49 @@ public class PhysicalShapeObject extends GameObject {
 		}
 		
 		if (renderable) {
-			renderComponent.render();
+			if (isHighlighted) {
+				for (MeshPlus mp : renderComponent.items) {
+					mp.r = 150;
+					mp.g = 150;
+					mp.buildMesh();
+				}
+				renderComponent.render();
+			}
+			else {
+				for (MeshPlus mp : renderComponent.items) {
+					mp.r = 255;
+					mp.g = 255;
+					mp.buildMesh();
+				}
+				renderComponent.render();
+			}
 		}
 		
-		// render the center point
-		GL10 gl = Gdx.graphics.getGL10();
-		gl.glPointSize(5);
-		gl.glColor4f(1, 0, 0, 1);
-		ImmediateModeRenderer10 ir = new ImmediateModeRenderer10();
-		ir.begin(GL10.GL_POINTS);
-		ir.vertex(center.x, center.y, 0);
-		ir.end();
-		
-		gl.glLineWidth(3);
-		gl.glColor4f(.3f, .6f, 1, 1);
-		if (isHighlighted) {
-			gl.glColor4f(.3f, 1, .6f, 1);
+		if (!hasPhysics) {
+			GL10 gl = Gdx.graphics.getGL10();
+			gl.glPointSize(5);
+			gl.glColor4f(1, 0, 0, 1);
+			ImmediateModeRenderer10 ir = new ImmediateModeRenderer10();
+			
+			// render the center point
+			ir.begin(GL10.GL_POINTS);
+			ir.vertex(center.x, center.y, 0);
+			ir.end();
+			
+			// slightly different edge color if highlighted
+			gl.glLineWidth(2);
+			gl.glColor4f(.3f, .6f, 1, 1);
+			
+			// render the edges of the shape
+			ir.begin(GL10.GL_LINE_STRIP);
+			for (int i = 0; i < vertices.length; i++) {
+				ir.vertex(vertices[i].cpy().add(center).x, vertices[i].cpy().add(center).y, 0);
+			}
+			if (vertices.length >= 3)
+				ir.vertex(vertices[0].cpy().add(center).x, vertices[0].cpy().add(center).y, 0);
+			ir.end();
+			gl.glLineWidth(1);
 		}
-		ir.begin(GL10.GL_LINE_STRIP);
-		for (int i = 0; i < vertices.length; i++) {
-			ir.vertex(vertices[i].cpy().add(center).x, vertices[i].cpy().add(center).y, 0);
-		}
-		if (vertices.length >= 3)
-			ir.vertex(vertices[0].cpy().add(center).x, vertices[0].cpy().add(center).y, 0);
-		ir.end();
-		
-		gl.glLineWidth(1);
 	}
 	
 	public void updateVertices(Vector2[] newVertices) {

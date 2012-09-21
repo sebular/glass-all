@@ -34,13 +34,13 @@ public class RenderComponent extends Component {
 	public void render() {
 		GL10 gl = Gdx.graphics.getGL10();
 		
-		for (MeshPlus ri : items) {
+		for (MeshPlus mp : items) {
 			gl.glPushMatrix();
 			gl.glTranslatef(x, y, 0);
-			gl.glRotatef((ri.rotation + rotation) * MathUtils.radiansToDegrees, 0, 0, 1);
-			gl.glTranslatef(ri.x, ri.y, 0);
+			gl.glRotatef((mp.rotation + rotation) * MathUtils.radiansToDegrees, 0, 0, 1);
+			gl.glTranslatef(mp.x, mp.y, 0);
 			
-			ri.mesh.render(GL10.GL_TRIANGLES, 0, ri.mesh.getMaxVertices());
+			mp.mesh.render(GL10.GL_TRIANGLES, 0, mp.mesh.getMaxVertices());
 			gl.glPopMatrix();
 		}
 		
