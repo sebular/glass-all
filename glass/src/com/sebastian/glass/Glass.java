@@ -26,9 +26,8 @@ public class Glass implements ApplicationListener { //, InputProcessor {
 		SCREEN_WIDTH = Gdx.graphics.getWidth();
 		SCREEN_HEIGHT = Gdx.graphics.getHeight();
 		System.out.println(SCREEN_WIDTH);
-		camera = new OrthographicCamera(100, (SCREEN_HEIGHT / SCREEN_WIDTH) * 100);
-		//camera = new OrthographicCamera(ConvertToBox(SCREEN_WIDTH), ConvertToBox(SCREEN_HEIGHT));
-		System.out.println(camera.position.toString());
+		//camera = new OrthographicCamera(100, (SCREEN_HEIGHT / SCREEN_WIDTH) * 100);
+		camera = new OrthographicCamera(33, 20.625f);
 		world = new World(new Vector2(0, 0), true);
 		
 		renderer = new Box2DDebugRenderer();
@@ -43,12 +42,14 @@ public class Glass implements ApplicationListener { //, InputProcessor {
 	}
 
 	@Override
-	public void render() {		
+	public void render() {
+		GL10 gl = Gdx.graphics.getGL10();
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 		
 		world.step(Gdx.app.getGraphics().getDeltaTime(), 8, 3);
 		camera.update();
+		camera.apply(gl);
 		for (GameObject g : gameObjects) {
 			g.update();
 		}
@@ -72,16 +73,16 @@ public class Glass implements ApplicationListener { //, InputProcessor {
 	}
 
 	public Vector2 screenToWorld(Vector2 coords) {
-		float x = ConvertToBox(coords.x);
-		float y = ConvertToBox(-coords.y);
-		return coords.mul(WORLD_TO_BOX);
-		
+		//float x = ConvertToBox(coords.x);
+		//float y = ConvertToBox(-coords.y);
+		//return coords.mul(WORLD_TO_BOX);
+		//return coords;
 		//Vector3 newPoint = new Vector3(coords.x, coords.y, 0);
 		//camera.project(newPoint);
-		//float x = ((ConvertToBox(coords.x) / SCREEN_WIDTH) - .5f) * camera.viewportWidth;
-		//float y = (-(ConvertToBox(coords.y) / SCREEN_HEIGHT) + .5f) * camera.viewportHeight;
+		float x = ((coords.x / SCREEN_WIDTH) - .5f) * camera.viewportWidth;
+		float y = (-(coords.y / SCREEN_HEIGHT) + .5f) * camera.viewportHeight;
 		//return new Vector2(newPoint.x, newPoint.y);
-		//return new Vector2(x,y);
+		return new Vector2(x,y);
 	}
 	
 	float ConvertToBox(float x){

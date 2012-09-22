@@ -72,6 +72,9 @@ public class MeshPlus implements Comparable<Object> {
 	
 	public void buildMesh() {
 		int nVertexAttributes = 6;
+		if (mesh != null) {
+			mesh.dispose();
+		}
 		mesh = new Mesh(true, triangles.size * 3, triangles.size * 3, 
 				new VertexAttribute(Usage.Position, 3, "a_position"),
 				new VertexAttribute(Usage.ColorPacked, 4, "a_color"),

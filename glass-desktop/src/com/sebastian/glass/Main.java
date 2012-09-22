@@ -8,8 +8,8 @@ public class Main {
 		LwjglApplicationConfiguration cfg = new LwjglApplicationConfiguration();
 		cfg.title = "glass";
 		cfg.useGL20 = false;
-		cfg.width = 854;
-		cfg.height = 480;
+		cfg.width = 1280;
+		cfg.height = 800;
 		
 		new LwjglApplication(new Glass(), cfg);
 	}

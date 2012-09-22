@@ -28,6 +28,9 @@ public class RenderComponent extends Component {
 	}
 	
 	public void clearItems() {
+		for(MeshPlus m : items) {
+			m.mesh.dispose();
+		}
 		items = new Array<MeshPlus>();
 	}
 	
