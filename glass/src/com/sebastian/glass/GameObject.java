@@ -5,6 +5,7 @@ import com.badlogic.gdx.physics.box2d.World;
 public abstract class GameObject {
 	protected World world;
 	private static Glass game;
+	ObjectType objectType;
 	
 	PhysicsComponent physicsComponent;
 	RenderComponent renderComponent;

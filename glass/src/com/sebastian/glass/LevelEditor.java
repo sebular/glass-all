@@ -63,17 +63,14 @@ public class LevelEditor implements InputProcessor {
 		
 		if (selectedGameObject == null) {
 		
-			if (seconds > 1) {
-				// Start new shape
-				if (!currentShape) {
-					System.out.println("beginning");
+			if (seconds > .5) {
+				if (!currentShape) { // Start new shape
 					Vector2 center = game.screenToWorld(new Vector2(x,y));
 					Vector2[] verts = { new Vector2(0,0) };
-					currentGameObject = new PhysicalShapeObject(game.world, center, verts);
+					currentGameObject = new PhysicalShapeObject(game, center, verts);
 					currentShape = true;
 				}
-				else {
-					System.out.println("ending");
+				else { // Complete a shape
 					currentGameObject.initPhysics();
 					game.gameObjects.add(currentGameObject);
 					
@@ -83,7 +80,6 @@ public class LevelEditor implements InputProcessor {
 			}
 			else {
 				if (currentShape) {
-					System.out.println("adding");
 					currentGameObject.addVertex(game.screenToWorld(new Vector2(x,y)).sub(currentGameObject.center));
 				}
 			}
@@ -103,13 +99,24 @@ public class LevelEditor implements InputProcessor {
 
 	@Override
 	public boolean mouseMoved(int x, int y) {
-		System.out.println("x:" + x + " y:" + y);
 		if (!currentShape) {
 			for (GameObject g : game.gameObjects) {
 				g.unHighlight();
 				for (Fixture f : g.physicsComponent.body.getFixtureList()) {
-					if (f.testPoint(game.screenToWorld(new Vector2(x,y)))) {
+					if (f.testPoint(game.screenToWorld(new Vector2(x,y)))) { // mouse is hovering over GameObject g
 						g.highlight();
+						
+						if (g.objectType == ObjectType.PhysicalShapeObject) {
+							PhysicalShapeObject pso = (PhysicalShapeObject)g;
+							int index = pso.getCloseVertex(new Vector2(x,y));
+							pso.highlightVertex(index);
+						}
+					}
+					else {
+						if (g.objectType == ObjectType.PhysicalShapeObject) {
+							PhysicalShapeObject pso = (PhysicalShapeObject)g;
+							//pso.highlightVertex(-1);
+						}
 					}
 				}
 			}

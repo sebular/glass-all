@@ -54,7 +54,7 @@ public class Glass implements ApplicationListener { //, InputProcessor {
 			g.update();
 		}
 		levelEditor.update();
-		//renderer.render(world, camera.combined);
+		renderer.render(world, camera.combined);
 		
 	}
 
@@ -73,16 +73,15 @@ public class Glass implements ApplicationListener { //, InputProcessor {
 	}
 
 	public Vector2 screenToWorld(Vector2 coords) {
-		//float x = ConvertToBox(coords.x);
-		//float y = ConvertToBox(-coords.y);
-		//return coords.mul(WORLD_TO_BOX);
-		//return coords;
-		//Vector3 newPoint = new Vector3(coords.x, coords.y, 0);
-		//camera.project(newPoint);
 		float x = ((coords.x / SCREEN_WIDTH) - .5f) * camera.viewportWidth;
 		float y = (-(coords.y / SCREEN_HEIGHT) + .5f) * camera.viewportHeight;
-		//return new Vector2(newPoint.x, newPoint.y);
 		return new Vector2(x,y);
+	}
+	
+	public Vector2 worldToScreen(Vector2 coords) {
+		float x = ((coords.x / camera.viewportWidth) * SCREEN_WIDTH) + (.5f / SCREEN_WIDTH);
+		float y = ((coords.y) / camera.viewportHeight) * SCREEN_HEIGHT - (.5f / SCREEN_HEIGHT);
+		return new Vector2(x,-y);
 	}
 	
 	float ConvertToBox(float x){

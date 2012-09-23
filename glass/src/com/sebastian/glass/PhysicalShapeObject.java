@@ -9,14 +9,17 @@ import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.World;
 
 public class PhysicalShapeObject extends GameObject {
+	Glass game;
 	Vector2 center;
 	Vector2[] vertices;
 	boolean hasPhysics = false;
 	boolean renderable = false;
+	int highlightedVertex = -1;
 	
-	
-	public PhysicalShapeObject(World world, Vector2 center, Vector2[] vertices) {
-		super(world);
+	public PhysicalShapeObject(Glass game, Vector2 center, Vector2[] vertices) {
+		super(game.world);
+		this.game = game;
+		this.objectType = ObjectType.PhysicalShapeObject;
 		this.center = center;
 		this.vertices = vertices;
 		init();
@@ -60,12 +63,13 @@ public class PhysicalShapeObject extends GameObject {
 				renderComponent.render();
 			}
 		}
-		
+		GL10 gl = Gdx.graphics.getGL10();
+		ImmediateModeRenderer10 ir = new ImmediateModeRenderer10();
 		if (!hasPhysics) {
-			GL10 gl = Gdx.graphics.getGL10();
+			
 			gl.glPointSize(5);
 			gl.glColor4f(1, 0, 0, 1);
-			ImmediateModeRenderer10 ir = new ImmediateModeRenderer10();
+			
 			
 			// render the center point
 			ir.begin(GL10.GL_POINTS);
@@ -86,6 +90,54 @@ public class PhysicalShapeObject extends GameObject {
 			ir.end();
 			gl.glLineWidth(1);
 		}
+		
+		
+		
+		//render the selected Vertex
+		
+		if (highlightedVertex >= 0) {
+			gl.glPointSize(5);
+			gl.glColor4f(1, 0, 0, 1);
+			//System.out.println("rendering Vertex");
+			gl.glPushMatrix();
+			gl.glTranslatef(center.x, center.y, 0);
+			//gl.glRotatef(physicsComponent.body.getTransform().getRotation() * MathUtils.radiansToDegrees, 0, 0, 1);
+			ir.begin(GL10.GL_POINTS);
+			ir.vertex(vertices[highlightedVertex].x, vertices[highlightedVertex].y, 0);
+			//ir.vertex(game.screenToWorld(vertices[highlightedVertex]).x, game.screenToWorld(vertices[highlightedVertex]).y, 0);
+			ir.end();
+			gl.glPopMatrix();
+		}
+		
+	}
+	
+	public int getCloseVertex(Vector2 mousePosition) {
+		System.out.println("mousePosition: " + mousePosition);
+		System.out.println("vertices: ");
+		for (int i = 0; i < vertices.length; i++) {
+			System.out.print (vertices[i] + ", ");
+		}
+		System.out.println();
+		Vector2 localMousePoint = physicsComponent.body.getLocalPoint(game.screenToWorld(mousePosition));
+		System.out.println(localMousePoint);
+		
+		//Vector2 minDistance = new Vector2(Float.MAX_VALUE, Float.MAX_VALUE);
+		int closestVertexIndex = -1;
+		Float minDistance = Float.MAX_VALUE;
+		for (int i = 0; i < vertices.length; i++) {
+			Float distanceToMouse = localMousePoint.dst(vertices[i]);
+			if (distanceToMouse < minDistance) {
+				minDistance = distanceToMouse;
+				closestVertexIndex = i;
+				System.out.println("Closest vertex index: " + i);
+			}
+		}
+		
+		return closestVertexIndex;
+	}
+	
+	public void highlightVertex(int index) {
+		highlightedVertex = index;
 	}
 	
 	public void updateVertices(Vector2[] newVertices) {
