@@ -15,6 +15,7 @@ public class PhysicalShapeObject extends GameObject {
 	boolean hasPhysics = false;
 	boolean renderable = false;
 	int highlightedVertex = -1;
+	float rotation;
 	
 	public PhysicalShapeObject(Glass game, Vector2 center, Vector2[] vertices) {
 		super(game.world);
@@ -22,6 +23,7 @@ public class PhysicalShapeObject extends GameObject {
 		this.objectType = ObjectType.PhysicalShapeObject;
 		this.center = center;
 		this.vertices = vertices;
+		this.rotation = 0;
 		init();
 	}
 
@@ -40,9 +42,12 @@ public class PhysicalShapeObject extends GameObject {
 		// Should only be doing this once it has a complete physics object.
 		
 		if (hasPhysics) { 
-			renderComponent.x = physicsComponent.body.getPosition().x;
-			renderComponent.y = physicsComponent.body.getPosition().y;
-			renderComponent.rotation = physicsComponent.body.getAngle();
+			center.x = physicsComponent.body.getPosition().x;
+			center.y = physicsComponent.body.getPosition().y;
+			rotation = physicsComponent.body.getAngle();
+			renderComponent.x = center.x;
+			renderComponent.y = center.y;
+			renderComponent.rotation = rotation;
 		}
 		
 		if (renderable) {
@@ -91,20 +96,15 @@ public class PhysicalShapeObject extends GameObject {
 			gl.glLineWidth(1);
 		}
 		
-		
-		
 		//render the selected Vertex
-		
 		if (highlightedVertex >= 0) {
 			gl.glPointSize(5);
-			gl.glColor4f(1, 0, 0, 1);
-			//System.out.println("rendering Vertex");
+			gl.glColor4f(.85f, 0, .85f, 1);
 			gl.glPushMatrix();
 			gl.glTranslatef(center.x, center.y, 0);
-			//gl.glRotatef(physicsComponent.body.getTransform().getRotation() * MathUtils.radiansToDegrees, 0, 0, 1);
+			gl.glRotatef(rotation * MathUtils.radiansToDegrees, 0, 0, 1);
 			ir.begin(GL10.GL_POINTS);
 			ir.vertex(vertices[highlightedVertex].x, vertices[highlightedVertex].y, 0);
-			//ir.vertex(game.screenToWorld(vertices[highlightedVertex]).x, game.screenToWorld(vertices[highlightedVertex]).y, 0);
 			ir.end();
 			gl.glPopMatrix();
 		}
@@ -112,16 +112,7 @@ public class PhysicalShapeObject extends GameObject {
 	}
 	
 	public int getCloseVertex(Vector2 mousePosition) {
-		System.out.println("mousePosition: " + mousePosition);
-		System.out.println("vertices: ");
-		for (int i = 0; i < vertices.length; i++) {
-			System.out.print (vertices[i] + ", ");
-		}
-		System.out.println();
 		Vector2 localMousePoint = physicsComponent.body.getLocalPoint(game.screenToWorld(mousePosition));
-		System.out.println(localMousePoint);
-		
-		//Vector2 minDistance = new Vector2(Float.MAX_VALUE, Float.MAX_VALUE);
 		int closestVertexIndex = -1;
 		Float minDistance = Float.MAX_VALUE;
 		for (int i = 0; i < vertices.length; i++) {
@@ -129,11 +120,11 @@ public class PhysicalShapeObject extends GameObject {
 			if (distanceToMouse < minDistance) {
 				minDistance = distanceToMouse;
 				closestVertexIndex = i;
-				System.out.println("Closest vertex index: " + i);
 			}
 		}
-		
-		return closestVertexIndex;
+		if (minDistance <= .25)
+			return closestVertexIndex;
+		return -1;
 	}
 	
 	public void highlightVertex(int index) {
@@ -141,6 +132,11 @@ public class PhysicalShapeObject extends GameObject {
 	}
 	
 	public void updateVertices(Vector2[] newVertices) {
+		if (hasPhysics) {
+			physicsComponent.destroyBody();
+			physicsComponent = null;
+			hasPhysics = false;
+		}
 		this.vertices = newVertices;
 		if (this.vertices.length >= 3) {
 			if (!renderable) {

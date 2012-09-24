@@ -54,7 +54,7 @@ public class Glass implements ApplicationListener { //, InputProcessor {
 			g.update();
 		}
 		levelEditor.update();
-		renderer.render(world, camera.combined);
+		//renderer.render(world, camera.combined);
 		
 	}
 

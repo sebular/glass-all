@@ -1,6 +1,7 @@
 package com.sebastian.glass;
 
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Fixture;
 
@@ -9,9 +10,12 @@ public class LevelEditor implements InputProcessor {
 	private long start = 0;
 	private boolean currentShape = false;
 	private PhysicalShapeObject currentGameObject;
+	private PhysicalShapeObject modifiedGameObject;
 	private GameObject selectedGameObject = null;
 	private Vector2 dragVector;
 	private Glass game;
+	int selectedVertex = -1;
+	int mouseButton = -1;
 	
 	public LevelEditor(Glass game) {
 		this.game = game;
@@ -45,13 +49,23 @@ public class LevelEditor implements InputProcessor {
 	public boolean touchDown(int x, int y, int pointer, int button) {
 		// start the click timer
 		start = System.nanoTime();
-		selectedGameObject = null;
-		for (GameObject g : game.gameObjects) {
-			if (g.isHighlighted) {
-				selectedGameObject = g;
-				dragVector = g.physicsComponent.body.getTransform().getPosition().cpy().sub(game.screenToWorld(new Vector2(x,y)));
+		mouseButton = button;
+		// left click
+		//if (button == 0) {
+			selectedGameObject = null;
+			for (GameObject g : game.gameObjects) {
+				if (g.isHighlighted) {
+					selectedGameObject = g;
+					dragVector = g.physicsComponent.body.getTransform().getPosition().cpy().sub(game.screenToWorld(new Vector2(x,y)));
+				}
 			}
-		}
+		//}
+		// right click
+		//else if (button == 1) {
+			if (selectedVertex >= 0) {
+				
+			}
+		//}
 		return false;
 	}
 
@@ -61,38 +75,63 @@ public class LevelEditor implements InputProcessor {
 		double seconds = (double)elapsedTime / 1000000000.0;
 		System.out.println(seconds);
 		
-		if (selectedGameObject == null) {
-		
-			if (seconds > .5) {
-				if (!currentShape) { // Start new shape
-					Vector2 center = game.screenToWorld(new Vector2(x,y));
-					Vector2[] verts = { new Vector2(0,0) };
-					currentGameObject = new PhysicalShapeObject(game, center, verts);
-					currentShape = true;
+		// left click
+		if (button == 0) {
+			if (selectedGameObject == null) {
+			
+				if (seconds > .5) {
+					if (!currentShape) { // Start new shape
+						Vector2 center = game.screenToWorld(new Vector2(x,y));
+						Vector2[] verts = { new Vector2(0,0) };
+						currentGameObject = new PhysicalShapeObject(game, center, verts);
+						currentShape = true;
+					}
+					else { // Complete a shape
+						currentGameObject.initPhysics();
+						game.gameObjects.add(currentGameObject);
+						
+						currentShape = false;
+						currentGameObject = null;
+					}
 				}
-				else { // Complete a shape
-					currentGameObject.initPhysics();
-					game.gameObjects.add(currentGameObject);
-					
-					currentShape = false;
-					currentGameObject = null;
-				}
-			}
-			else {
-				if (currentShape) {
-					currentGameObject.addVertex(game.screenToWorld(new Vector2(x,y)).sub(currentGameObject.center));
+				else {
+					if (currentShape) {
+						currentGameObject.addVertex(game.screenToWorld(new Vector2(x,y)).sub(currentGameObject.center));
+					}
 				}
 			}
 		}
+		
+		// right click
+		else if (button == 1) {
+			if (modifiedGameObject != null && !modifiedGameObject.hasPhysics) {
+				modifiedGameObject.initPhysics();
+				modifiedGameObject = null;
+			}
+		}
+		mouseButton = -1;
 		return false;
 	}
 
 	@Override
 	public boolean touchDragged(int x, int y, int pointer) {
-		if (selectedGameObject != null) {
-			Vector2 touchPosition = game.screenToWorld(new Vector2(x,y));
-			selectedGameObject.physicsComponent.body.setAwake(true);
-			selectedGameObject.physicsComponent.body.setTransform(touchPosition.cpy().add(dragVector), selectedGameObject.physicsComponent.body.getTransform().getRotation());
+		if (mouseButton == 0) {
+			if (selectedGameObject != null) {
+				Vector2 touchPosition = game.screenToWorld(new Vector2(x,y));
+				selectedGameObject.physicsComponent.body.setAwake(true);
+				selectedGameObject.physicsComponent.body.setTransform(touchPosition.cpy().add(dragVector), selectedGameObject.physicsComponent.body.getTransform().getRotation());
+			}
+		}
+		else if (mouseButton == 1) {
+			if (selectedGameObject != null && selectedVertex != -1) {
+				if (selectedGameObject.objectType == ObjectType.PhysicalShapeObject) {
+					modifiedGameObject = (PhysicalShapeObject)selectedGameObject;
+					Vector2[] currentVertices = modifiedGameObject.vertices;
+					currentVertices[selectedVertex] = game.screenToWorld(new Vector2(x,y)).sub(modifiedGameObject.center);
+					modifiedGameObject.updateVertices(currentVertices);
+				}
+				
+			}
 		}
 		return false;
 	}
@@ -102,22 +141,26 @@ public class LevelEditor implements InputProcessor {
 		if (!currentShape) {
 			for (GameObject g : game.gameObjects) {
 				g.unHighlight();
+				boolean isHighlighted = false;
 				for (Fixture f : g.physicsComponent.body.getFixtureList()) {
-					if (f.testPoint(game.screenToWorld(new Vector2(x,y)))) { // mouse is hovering over GameObject g
+					
+					if (f.testPoint(game.screenToWorld(new Vector2(x,y)))) {
+						// mouse is hovering over GameObject g
 						g.highlight();
-						
+						isHighlighted = true;
 						if (g.objectType == ObjectType.PhysicalShapeObject) {
 							PhysicalShapeObject pso = (PhysicalShapeObject)g;
-							int index = pso.getCloseVertex(new Vector2(x,y));
-							pso.highlightVertex(index);
+							selectedVertex = pso.getCloseVertex(new Vector2(x,y));
 						}
 					}
-					else {
-						if (g.objectType == ObjectType.PhysicalShapeObject) {
-							PhysicalShapeObject pso = (PhysicalShapeObject)g;
-							//pso.highlightVertex(-1);
-						}
-					}
+				}
+				
+				if (g.objectType == ObjectType.PhysicalShapeObject) {
+					PhysicalShapeObject pso = (PhysicalShapeObject)g;
+					if (isHighlighted)
+						pso.highlightVertex(selectedVertex);
+					else
+						pso.highlightVertex(-1);
 				}
 			}
 		}
