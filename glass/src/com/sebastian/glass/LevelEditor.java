@@ -1,8 +1,8 @@
 package com.sebastian.glass;
 
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Fixture;
 
 public class LevelEditor implements InputProcessor {
@@ -14,8 +14,16 @@ public class LevelEditor implements InputProcessor {
 	private GameObject selectedGameObject = null;
 	private Vector2 dragVector;
 	private Glass game;
+	float camX = 0;
+	float camY = 0;
 	int selectedVertex = -1;
 	int mouseButton = -1;
+	
+	boolean camDown = false;
+	boolean camUp = false;
+	boolean camLeft = false;
+	boolean camRight = false;
+	
 	
 	public LevelEditor(Glass game) {
 		this.game = game;
@@ -25,17 +33,40 @@ public class LevelEditor implements InputProcessor {
 		if(currentGameObject != null) {
 			currentGameObject.update();
 		}
+		updateCameraPosition();
 	}
 	
 	@Override
 	public boolean keyDown(int keycode) {
-
+		if (keycode == 51) {
+			camUp = true;
+		}
+		if (keycode == 47) {
+			camDown = true;
+		}
+		if (keycode == 29) {
+			camLeft = true;
+		}
+		if (keycode == 32) {
+			camRight = true;
+		}
 		return false;
 	}
 
 	@Override
 	public boolean keyUp(int keycode) {
-
+		if (keycode == 51) {
+			camUp = false;
+		}
+		if (keycode == 47) {
+			camDown = false;
+		}
+		if (keycode == 29) {
+			camLeft = false;
+		}
+		if (keycode == 32) {
+			camRight = false;
+		}
 		return false;
 	}
 
@@ -73,7 +104,7 @@ public class LevelEditor implements InputProcessor {
 	public boolean touchUp(int x, int y, int pointer, int button) {
 		long elapsedTime = System.nanoTime() - start;
 		double seconds = (double)elapsedTime / 1000000000.0;
-		System.out.println(seconds);
+		//System.out.println(seconds);
 		
 		// left click
 		if (button == 0) {
@@ -117,9 +148,9 @@ public class LevelEditor implements InputProcessor {
 	public boolean touchDragged(int x, int y, int pointer) {
 		if (mouseButton == 0) {
 			if (selectedGameObject != null) {
-				Vector2 touchPosition = game.screenToWorld(new Vector2(x,y));
+				Vector2 newPosition = game.screenToWorld(new Vector2(x,y)).add(dragVector);
 				selectedGameObject.physicsComponent.body.setAwake(true);
-				selectedGameObject.physicsComponent.body.setTransform(touchPosition.cpy().add(dragVector), selectedGameObject.physicsComponent.body.getTransform().getRotation());
+				selectedGameObject.physicsComponent.body.setTransform(newPosition, selectedGameObject.physicsComponent.body.getTransform().getRotation());
 			}
 		}
 		else if (mouseButton == 1) {
@@ -177,5 +208,22 @@ public class LevelEditor implements InputProcessor {
 	public boolean scrolled(int amount) {
 		
 		return false;
+	}
+	
+	private void updateCameraPosition() {
+		float camSpeed = 1;
+		
+		if (camDown) {
+			game.camera.position.y -= camSpeed;
+		}
+		if (camUp) {
+			game.camera.position.y += camSpeed;
+		}
+		if (camLeft) {
+			game.camera.position.x -= camSpeed;
+		}
+		if (camRight) {
+			game.camera.position.x += camSpeed;
+		}
 	}
 }

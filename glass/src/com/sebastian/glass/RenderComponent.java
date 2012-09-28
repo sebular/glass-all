@@ -23,7 +23,6 @@ public class RenderComponent extends Component {
 	
 	public MeshPlus setMeshPlus(MeshPlus meshPlus) {
 		clearItems();
-		System.out.println("cleared!");
 		return addMeshPlus(meshPlus);
 	}
 	
