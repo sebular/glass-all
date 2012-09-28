@@ -24,15 +24,20 @@ public class LevelEditor implements InputProcessor {
 	boolean camLeft = false;
 	boolean camRight = false;
 	
+	Player player;
+	
 	
 	public LevelEditor(Glass game) {
 		this.game = game;
+		player = new Player(game.world, new Vector2(0,0));
 	}
 	
 	public void update() {
 		if(currentGameObject != null) {
 			currentGameObject.update();
 		}
+		
+		player.update();
 		updateCameraPosition();
 	}
 	
