@@ -75,7 +75,7 @@ public class PhysicalShapeObject extends GameObject {
 		}
 		GL10 gl = Gdx.graphics.getGL10();
 		ImmediateModeRenderer10 ir = new ImmediateModeRenderer10();
-		if (!hasPhysics || true) {
+		if (!hasPhysics || game.DEBUG) {
 			gl.glPointSize(5);
 			gl.glColor4f(1, 0, 0, 1);
 			

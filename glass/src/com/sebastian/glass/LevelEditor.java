@@ -55,6 +55,9 @@ public class LevelEditor implements InputProcessor {
 		if (keycode == 32) {
 			camRight = true;
 		}
+		if (keycode == 30) {
+			game.DEBUG = !game.DEBUG;
+		}
 		return false;
 	}
 
@@ -86,22 +89,13 @@ public class LevelEditor implements InputProcessor {
 		// start the click timer
 		start = System.nanoTime();
 		mouseButton = button;
-		// left click
-		//if (button == 0) {
-			selectedGameObject = null;
-			for (GameObject g : game.gameObjects) {
-				if (g.isHighlighted) {
-					selectedGameObject = g;
-					dragVector = g.physicsComponent.body.getTransform().getPosition().cpy().sub(game.screenToWorld(new Vector2(x,y)));
-				}
+		selectedGameObject = null;
+		for (GameObject g : game.gameObjects) {
+			if (g.isHighlighted) {
+				selectedGameObject = g;
+				dragVector = g.physicsComponent.body.getTransform().getPosition().cpy().sub(game.screenToWorld(new Vector2(x,y)));
 			}
-		//}
-		// right click
-		//else if (button == 1) {
-			if (selectedVertex >= 0) {
-				
-			}
-		//}
+		}
 		return false;
 	}
 
@@ -109,8 +103,6 @@ public class LevelEditor implements InputProcessor {
 	public boolean touchUp(int x, int y, int pointer, int button) {
 		long elapsedTime = System.nanoTime() - start;
 		double seconds = (double)elapsedTime / 1000000000.0;
-		//System.out.println(seconds);
-		
 		// left click
 		if (button == 0) {
 			if (selectedGameObject == null) {
@@ -148,26 +140,34 @@ public class LevelEditor implements InputProcessor {
 		mouseButton = -1;
 		return false;
 	}
-
+	
+	private void moveShape(int x, int y) {
+		if (selectedGameObject != null) {
+			Vector2 newPosition = game.screenToWorld(new Vector2(x,y)).add(dragVector);
+			selectedGameObject.physicsComponent.body.setAwake(true);
+			selectedGameObject.physicsComponent.body.setTransform(newPosition, selectedGameObject.physicsComponent.body.getTransform().getRotation());
+		}
+	}
+	
+	private void moveVertex(int x, int y) {
+		if (selectedGameObject != null && selectedVertex != -1) {
+			if (selectedGameObject.objectType == ObjectType.PhysicalShapeObject) {
+				modifiedGameObject = (PhysicalShapeObject)selectedGameObject;
+				Vector2[] currentVertices = modifiedGameObject.vertices;
+				currentVertices[selectedVertex] = game.screenToWorld(new Vector2(x,y)).sub(modifiedGameObject.center);
+				modifiedGameObject.updateVertices(currentVertices);
+			}
+			
+		}
+	}
+	
 	@Override
 	public boolean touchDragged(int x, int y, int pointer) {
 		if (mouseButton == 0) {
-			if (selectedGameObject != null) {
-				Vector2 newPosition = game.screenToWorld(new Vector2(x,y)).add(dragVector);
-				selectedGameObject.physicsComponent.body.setAwake(true);
-				selectedGameObject.physicsComponent.body.setTransform(newPosition, selectedGameObject.physicsComponent.body.getTransform().getRotation());
-			}
+			moveShape(x, y);
 		}
 		else if (mouseButton == 1) {
-			if (selectedGameObject != null && selectedVertex != -1) {
-				if (selectedGameObject.objectType == ObjectType.PhysicalShapeObject) {
-					modifiedGameObject = (PhysicalShapeObject)selectedGameObject;
-					Vector2[] currentVertices = modifiedGameObject.vertices;
-					currentVertices[selectedVertex] = game.screenToWorld(new Vector2(x,y)).sub(modifiedGameObject.center);
-					modifiedGameObject.updateVertices(currentVertices);
-				}
-				
-			}
+			moveVertex(x,y);
 		}
 		return false;
 	}

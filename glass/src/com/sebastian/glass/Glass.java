@@ -20,6 +20,7 @@ public class Glass implements ApplicationListener { //, InputProcessor {
 	private Box2DDebugRenderer renderer;
 	private float SCREEN_WIDTH, SCREEN_HEIGHT;
 	private LevelEditor levelEditor;
+	boolean DEBUG = false;
 	
 	@Override
 	public void create() {		
@@ -54,7 +55,7 @@ public class Glass implements ApplicationListener { //, InputProcessor {
 			g.update();
 		}
 		levelEditor.update();
-		renderer.render(world, camera.combined);
+		if (DEBUG) renderer.render(world, camera.combined);
 		
 	}
 
