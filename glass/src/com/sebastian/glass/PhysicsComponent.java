@@ -6,7 +6,6 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Fixture;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.Shape;
 import com.badlogic.gdx.physics.box2d.World;
@@ -16,8 +15,6 @@ public class PhysicsComponent extends Component {
 	public World world;
 	public Body body;
 	public BodyDef bodyDef;
-	
-	//private Array<Shape> shapes;
 	
 	public PhysicsComponent(World world) {
 		this.world = world;
@@ -34,11 +31,7 @@ public class PhysicsComponent extends Component {
 	public Body getBody() {
 		return body;
 	}
-	/*
-	public Shape getShape(int index) {
-		return shapes.get(index);
-	}
-	*/
+	
 	public boolean createBody() {
 		if (world != null && bodyDef != null) {
 			this.body = this.world.createBody(this.bodyDef);

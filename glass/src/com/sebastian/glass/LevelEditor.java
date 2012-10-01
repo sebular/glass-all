@@ -2,15 +2,14 @@ package com.sebastian.glass;
 
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Fixture;
 
 public class LevelEditor implements InputProcessor {
 	
 	private long start = 0;
 	private boolean currentShape = false;
-	private PhysicalShapeObject currentGameObject;
-	private PhysicalShapeObject modifiedGameObject;
+	private GameObject currentGameObject;
+	private GameObject modifiedGameObject;
 	private GameObject selectedGameObject = null;
 	private Vector2 dragVector;
 	private Glass game;
@@ -29,15 +28,14 @@ public class LevelEditor implements InputProcessor {
 	
 	public LevelEditor(Glass game) {
 		this.game = game;
-		player = new Player(game.world, new Vector2(0,0));
+		player = new Player(game, new Vector2(0,0));
+		game.gameObjects.add(player);
 	}
 	
 	public void update() {
 		if(currentGameObject != null) {
-			currentGameObject.update();
-		}
-		
-		player.update();
+			currentGameObject.updateObject();
+		}	
 		updateCameraPosition();
 	}
 	
@@ -124,7 +122,7 @@ public class LevelEditor implements InputProcessor {
 				}
 				else {
 					if (currentShape) {
-						currentGameObject.addVertex(game.screenToWorld(new Vector2(x,y)).sub(currentGameObject.center));
+						currentGameObject.addVertex(game.screenToWorld(new Vector2(x,y)).sub(currentGameObject.position));
 					}
 				}
 			}
@@ -132,7 +130,7 @@ public class LevelEditor implements InputProcessor {
 		
 		// right click
 		else if (button == 1) {
-			if (modifiedGameObject != null && !modifiedGameObject.hasPhysics) {
+			if (modifiedGameObject != null && !modifiedGameObject.hasComponent(ComponentType.PhysicsComponent)) {
 				modifiedGameObject.initPhysics();
 				modifiedGameObject = null;
 			}
@@ -151,13 +149,10 @@ public class LevelEditor implements InputProcessor {
 	
 	private void moveVertex(int x, int y) {
 		if (selectedGameObject != null && selectedVertex != -1) {
-			if (selectedGameObject.objectType == ObjectType.PhysicalShapeObject) {
-				modifiedGameObject = (PhysicalShapeObject)selectedGameObject;
-				Vector2[] currentVertices = modifiedGameObject.vertices;
-				currentVertices[selectedVertex] = game.screenToWorld(new Vector2(x,y)).sub(modifiedGameObject.center);
-				modifiedGameObject.updateVertices(currentVertices);
-			}
-			
+			modifiedGameObject = selectedGameObject;
+			Vector2[] currentVertices = modifiedGameObject.vertices;
+			currentVertices[selectedVertex] = game.screenToWorld(new Vector2(x,y)).sub(modifiedGameObject.position);
+			modifiedGameObject.updateVertices(currentVertices);
 		}
 	}
 	
@@ -184,26 +179,20 @@ public class LevelEditor implements InputProcessor {
 						// mouse is hovering over GameObject g
 						g.highlight();
 						isHighlighted = true;
-						if (g.objectType == ObjectType.PhysicalShapeObject) {
-							PhysicalShapeObject pso = (PhysicalShapeObject)g;
-							selectedVertex = pso.getCloseVertex(new Vector2(x,y));
-						}
+						selectedVertex = g.getCloseVertex(new Vector2(x,y));
 					}
 				}
 				
-				if (g.objectType == ObjectType.PhysicalShapeObject) {
-					PhysicalShapeObject pso = (PhysicalShapeObject)g;
-					if (isHighlighted)
-						pso.highlightVertex(selectedVertex);
-					else
-						pso.highlightVertex(-1);
-				}
+				if (isHighlighted)
+					g.highlightVertex(selectedVertex);
+				else
+					g.highlightVertex(-1);
 			}
 		}
 		
 		if (currentShape && currentGameObject.vertices.length >= 3) {
 			Vector2[] currentVertices = currentGameObject.vertices;
-			currentVertices[currentVertices.length - 1] = game.screenToWorld(new Vector2(x,y)).sub(currentGameObject.center);
+			currentVertices[currentVertices.length - 1] = game.screenToWorld(new Vector2(x,y)).sub(currentGameObject.position);
 			currentGameObject.updateVertices(currentVertices);
 		}
 		return false;
